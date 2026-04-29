@@ -284,6 +284,11 @@ function App() {
   if (phase === "fortune") return <FortuneWheelScreen onBack={() => setPhase("hub")} />;
   if (phase === "stickers") return <StickerBookScreen onBack={() => setPhase("hub")} />;
   if (phase === "quiz") return <FriendshipQuizScreen onBack={() => setPhase("hub")} />;
+  if (phase === "love") return <LoveCalculatorScreen onBack={() => setPhase("hub")} />;
+  if (phase === "horoscope") return <HoroscopeScreen onBack={() => setPhase("hub")} />;
+  if (phase === "memory") return <MemoryMatchScreen onBack={() => setPhase("hub")} />;
+  if (phase === "dream") return <DreamMirrorScreen onBack={() => setPhase("hub")} />;
+  if (phase === "persona") return <StarPersonaScreen onBack={() => setPhase("hub")} />;
 
   return (
     <div className="jeopardy-app">
@@ -1214,6 +1219,11 @@ const PLAY_CARDS = [
   { id: "makeup", emoji: "💄", title: "Makeup Studio", desc: "Tegn makeup pa ansiktet med ulike verktøy.", tags: ["sminke", "makeup", "beauty"] },
   { id: "nails", emoji: "💅", title: "Nail Studio", desc: "Neglelakk, former og stickers pa negler.", tags: ["negler", "nail", "design"] },
   { id: "fortune", emoji: "🔮", title: "Fortune Spinner", desc: "Snurr hjulet for en cute challenge.", tags: ["lek", "spinn", "challenge"] },
+  { id: "love", emoji: "💘", title: "Love Calculator", desc: "Klassisk Josefine-vibe: sjekk match i prosent.", tags: ["love test", "kjærlighet", "klassisk"] },
+  { id: "horoscope", emoji: "🌙", title: "Dagens Horoskop", desc: "Velg stjernetegn og få dagens vibe-rad.", tags: ["horoskop", "stjernetegn", "spå"] },
+  { id: "dream", emoji: "🪞", title: "Drømmespeilet", desc: "Tolk drømmer med symboler, humør og dagbok.", tags: ["drøm", "drømmespeilet", "tolkning"] },
+  { id: "persona", emoji: "🌟", title: "Star Persona Test", desc: "Finn din Josefine-stjernepersona med quiz.", tags: ["personlighet", "stjerne", "test"] },
+  { id: "memory", emoji: "🧠", title: "Memory Match", desc: "Finn par i et cute emoji-memoryspill.", tags: ["memory", "kortspill", "par"] },
   { id: "stickers", emoji: "🧷", title: "Sticker Book", desc: "Lag eget klistremerke-kort.", tags: ["sticker", "kreativ", "toy"] },
   { id: "quiz", emoji: "💕", title: "Friendship Quiz", desc: "Finn hvilken bestie-vibe du har.", tags: ["vennskap", "personlighet", "quiz"] },
 ];
@@ -1239,13 +1249,13 @@ function PlayHubScreen({ onOpen }) {
       <EmojiBackground />
       <div className="play-hub-inner">
         <h1 className="fashion-title">🧸 Cute Play Hub 🧸</h1>
-        <p className="fashion-sub">Sok etter jentete spill og leker du vil spille!</p>
+        <p className="fashion-sub">Søk etter jentete spill og leker du vil spille!</p>
 
         <input
           className="hub-search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Sok: quiz, makeup, negler, stickers..."
+          placeholder="Søk: quiz, makeup, negler, stickers..."
         />
 
         <div className="hub-grid">
@@ -1457,6 +1467,586 @@ function FriendshipQuizScreen({ onBack }) {
             <button className="start-btn" onClick={restart}>Ta quizen igjen</button>
           </div>
         )}
+        <button className="start-btn fashion-back-btn" onClick={onBack}>← Tilbake</button>
+      </div>
+    </div>
+  );
+}
+
+// ── Classic Josefine Vibes ───────────────────────────────────
+const LOVE_VIBES = ["Romantisk", "Bestevenn-vibe", "Flirty", "Slow burn"];
+const LOVE_SPOTS = ["Kafe-date", "Kino", "Shopping", "Parktur"];
+
+function LoveCalculatorScreen({ onBack }) {
+  const [nameA, setNameA] = useState("");
+  const [nameB, setNameB] = useState("");
+  const [vibe, setVibe] = useState(LOVE_VIBES[0]);
+  const [spot, setSpot] = useState(LOVE_SPOTS[0]);
+  const [result, setResult] = useState(null);
+
+  const calculate = () => {
+    const a = nameA.trim().toLowerCase();
+    const b = nameB.trim().toLowerCase();
+    if (!a || !b) return;
+    const mix = `${a}|${b}|${vibe}|${spot}`;
+    let hash = 0;
+    for (let i = 0; i < mix.length; i++) hash = (hash * 31 + mix.charCodeAt(i)) % 10000;
+    const pct = 35 + (hash % 66);
+    const chemistry = 50 + (hash % 51);
+    const trust = 45 + ((hash * 7) % 56);
+    const fun = 40 + ((hash * 13) % 61);
+    let msg = "Cute match! 💖";
+    if (pct >= 90) msg = "Soulmate energy! 👑";
+    else if (pct >= 75) msg = "Super sweet duo ✨";
+    else if (pct >= 55) msg = "Lovende chemistry 💕";
+    else msg = "Flirt and see what happens 😉";
+    const missions = [
+      "Send en hyggelig melding i dag 📱",
+      "Planlegg en mini-date med favorittsnacks 🍓",
+      "Lag en cute spilleliste sammen 🎧",
+      "Gi et ekte kompliment til hverandre 💌",
+    ];
+    const mission = missions[hash % missions.length];
+    setResult({ pct, msg, chemistry, trust, fun, mission });
+  };
+
+  return (
+    <div className="love-screen">
+      <EmojiBackground />
+      <div className="love-inner">
+        <h1 className="fashion-title">💘 Love Calculator 💘</h1>
+        <p className="fashion-sub">Den klassiske Josefine-testen, bare cutere!</p>
+
+        <div className="love-card">
+          <div className="game-guide">
+            <strong>Slik spiller du:</strong> skriv to navn, velg vibe + date-idé, og få matchprosent + breakdown.
+          </div>
+          <input className="setup-input" placeholder="Navn 1" value={nameA} onChange={(e) => setNameA(e.target.value)} />
+          <input className="setup-input" placeholder="Navn 2" value={nameB} onChange={(e) => setNameB(e.target.value)} />
+          <select className="setup-input" value={vibe} onChange={(e) => setVibe(e.target.value)}>
+            {LOVE_VIBES.map((v) => <option key={v} value={v}>{v}</option>)}
+          </select>
+          <select className="setup-input" value={spot} onChange={(e) => setSpot(e.target.value)}>
+            {LOVE_SPOTS.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+          <button className="start-btn" onClick={calculate}>Regn ut match 💖</button>
+          {result && (
+            <div className="love-result">
+              <p className="love-percent">{result.pct}%</p>
+              <p className="friendship-result">{result.msg}</p>
+              <div className="stat-grid">
+                <p className="stat-pill">Chemistry: {result.chemistry}%</p>
+                <p className="stat-pill">Trust: {result.trust}%</p>
+                <p className="stat-pill">Fun: {result.fun}%</p>
+              </div>
+              <p className="fortune-result"><strong>Josefine challenge:</strong> {result.mission}</p>
+            </div>
+          )}
+        </div>
+
+        <button className="start-btn fashion-back-btn" onClick={onBack}>← Tilbake</button>
+      </div>
+    </div>
+  );
+}
+
+const HOROSCOPE_SIGNS = [
+  "Væren", "Tyren", "Tvillingene", "Krepsen", "Løven", "Jomfruen",
+  "Vekten", "Skorpionen", "Skytten", "Steinbukken", "Vannmannen", "Fiskene",
+];
+
+const HOROSCOPE_TIPS = [
+  "I dag er dagen for å prøve en ny stilkombinasjon ✨",
+  "Du tiltrekker deg main-character energi i dag 👑",
+  "Ta en liten selfcare-pause, du fortjener det 💆‍♀️",
+  "En kreativ idé kommer når du minst venter det 🎨",
+  "Si ja til noe gøy med vennene dine 💃",
+  "Gi deg selv et kompliment i speilet i dag 💖",
+];
+
+const HOROSCOPE_FOCUS = ["Love", "Style", "Vennskap", "Skole"];
+const LUCKY_COLORS = ["Rosa", "Lavendel", "Mint", "Gull", "Himmelblå", "Peach"];
+const POWER_MOVES = [
+  "Si ja til noe nytt i dag ✨",
+  "Ta et speil-selfie med favorittlook 📸",
+  "Start dagen med en feelgood-sang 🎶",
+  "Send en positiv melding til en venn 💬",
+  "Bruk 15 min på et kreativt prosjekt 🎨",
+];
+
+function HoroscopeScreen({ onBack }) {
+  const [sign, setSign] = useState(HOROSCOPE_SIGNS[0]);
+  const [focus, setFocus] = useState(HOROSCOPE_FOCUS[0]);
+  const [reading, setReading] = useState(null);
+
+  const reveal = () => {
+    const seed = sign.length * 19 + focus.length * 7 + new Date().getDate();
+    const tip = HOROSCOPE_TIPS[seed % HOROSCOPE_TIPS.length];
+    const luckyColor = LUCKY_COLORS[seed % LUCKY_COLORS.length];
+    const luckyNumber = (seed % 9) + 1;
+    const powerMove = POWER_MOVES[seed % POWER_MOVES.length];
+    setReading({ tip, luckyColor, luckyNumber, powerMove });
+  };
+
+  return (
+    <div className="love-screen">
+      <EmojiBackground />
+      <div className="love-inner">
+        <h1 className="fashion-title">🌙 Dagens Horoskop 🌙</h1>
+        <p className="fashion-sub">Velg stjernetegn og få dagens vibe!</p>
+
+        <div className="love-card">
+          <div className="game-guide">
+            <strong>Slik spiller du:</strong> velg stjernetegn + fokusområde og hent dagens råd, lucky color og lucky number.
+          </div>
+          <select className="setup-input" value={sign} onChange={(e) => setSign(e.target.value)}>
+            {HOROSCOPE_SIGNS.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+          <select className="setup-input" value={focus} onChange={(e) => setFocus(e.target.value)}>
+            {HOROSCOPE_FOCUS.map((f) => <option key={f} value={f}>{f}</option>)}
+          </select>
+          <button className="start-btn" onClick={reveal}>Vis horoskop 🔮</button>
+          {!reading ? (
+            <p className="friendship-result">Trykk for å få dagens råd</p>
+          ) : (
+            <div className="love-result horoscope-card">
+              <p className="friendship-result">{reading.tip}</p>
+              <div className="stat-grid">
+                <p className="stat-pill">Lucky color: {reading.luckyColor}</p>
+                <p className="stat-pill">Lucky number: {reading.luckyNumber}</p>
+              </div>
+              <p className="fortune-result"><strong>Power move:</strong> {reading.powerMove}</p>
+            </div>
+          )}
+        </div>
+
+        <button className="start-btn fashion-back-btn" onClick={onBack}>← Tilbake</button>
+      </div>
+    </div>
+  );
+}
+
+const MEMORY_LEVELS = {
+  easy: ["💖", "🎀", "🌸", "🦋", "💎", "⭐"],
+  medium: ["💖", "🎀", "🌸", "🦋", "💎", "⭐", "🌈", "🧸"],
+  hard: ["💖", "🎀", "🌸", "🦋", "💎", "⭐", "🌈", "🧸", "🍓", "🫧"],
+};
+
+function buildMemoryDeck(symbols) {
+  const pair = [...symbols, ...symbols]
+    .map((symbol, i) => ({ id: `${symbol}-${i}`, symbol, open: false, matched: false }));
+  for (let i = pair.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pair[i], pair[j]] = [pair[j], pair[i]];
+  }
+  return pair;
+}
+
+function MemoryMatchScreen({ onBack }) {
+  const [level, setLevel] = useState("easy");
+  const [deck, setDeck] = useState(() => buildMemoryDeck(MEMORY_LEVELS.easy));
+  const [openIdx, setOpenIdx] = useState([]);
+  const [moves, setMoves] = useState(0);
+  const [seconds, setSeconds] = useState(0);
+  const [started, setStarted] = useState(false);
+
+  useEffect(() => {
+    if (!started) return;
+    const id = setInterval(() => setSeconds((s) => s + 1), 1000);
+    return () => clearInterval(id);
+  }, [started]);
+
+  const onCard = (idx) => {
+    if (openIdx.length === 2) return;
+    if (deck[idx].open || deck[idx].matched) return;
+    if (!started) setStarted(true);
+
+    const nextDeck = deck.map((c, i) => i === idx ? { ...c, open: true } : c);
+    const nextOpen = [...openIdx, idx];
+    setDeck(nextDeck);
+    setOpenIdx(nextOpen);
+
+    if (nextOpen.length === 2) {
+      setMoves((m) => m + 1);
+      const [a, b] = nextOpen;
+      if (nextDeck[a].symbol === nextDeck[b].symbol) {
+        setTimeout(() => {
+          setDeck((prev) => prev.map((c, i) => i === a || i === b ? { ...c, matched: true } : c));
+          setOpenIdx([]);
+        }, 250);
+      } else {
+        setTimeout(() => {
+          setDeck((prev) => prev.map((c, i) => i === a || i === b ? { ...c, open: false } : c));
+          setOpenIdx([]);
+        }, 700);
+      }
+    }
+  };
+
+  const won = deck.every((c) => c.matched);
+
+  useEffect(() => {
+    if (won) setStarted(false);
+  }, [won]);
+
+  const reset = (nextLevel = level) => {
+    setDeck(buildMemoryDeck(MEMORY_LEVELS[nextLevel]));
+    setOpenIdx([]);
+    setMoves(0);
+    setSeconds(0);
+    setStarted(false);
+  };
+
+  const changeLevel = (nextLevel) => {
+    setLevel(nextLevel);
+    reset(nextLevel);
+  };
+
+  return (
+    <div className="memory-screen">
+      <EmojiBackground />
+      <div className="love-inner">
+        <h1 className="fashion-title">🧠 Memory Match 🧠</h1>
+        <p className="fashion-sub">Finn alle parene med minst mulig trekk!</p>
+
+        <div className="game-guide">
+          <strong>Slik spiller du:</strong> velg nivå, finn to like kort, og slå best score på tid + trekk.
+        </div>
+
+        <div className="memory-level-row">
+          {Object.keys(MEMORY_LEVELS).map((lvl) => (
+            <button key={lvl} className={`friendship-option-btn memory-level-btn ${level === lvl ? "active" : ""}`} onClick={() => changeLevel(lvl)}>
+              {lvl === "easy" ? "Easy" : lvl === "medium" ? "Medium" : "Hard"}
+            </button>
+          ))}
+        </div>
+
+        <p className="friendship-step">Trekk: {moves} · Tid: {seconds}s</p>
+        <div className={`memory-grid memory-grid-${level}`}>
+          {deck.map((card, i) => (
+            <button key={card.id} className={`memory-card ${card.open || card.matched ? "open" : ""}`} onClick={() => onCard(i)}>
+              <span>{card.open || card.matched ? card.symbol : "?"}</span>
+            </button>
+          ))}
+        </div>
+
+        {won && <p className="friendship-result">Perfekt! Du vant på {moves} trekk og {seconds} sek ✨</p>}
+        <button className="start-btn" onClick={reset}>Nytt memory-spill</button>
+        <button className="start-btn fashion-back-btn" onClick={onBack}>← Tilbake</button>
+      </div>
+    </div>
+  );
+}
+
+function DreamMirrorScreen({ onBack }) {
+  const [sessionId, setSessionId] = useState("");
+  const [state, setState] = useState(null);
+  const [message, setMessage] = useState("Laster Drømmespeilet...");
+  const [runeWord, setRuneWord] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const fetchJson = async (url, options = {}) => {
+    const res = await fetch(url, {
+      headers: { "Content-Type": "application/json" },
+      ...options,
+    });
+    if (!res.ok) throw new Error(`API ${res.status}`);
+    return res.json();
+  };
+
+  const refreshState = async (sid) => {
+    const data = await fetchJson(`/api/dream/state/${sid}`);
+    setState(data.state);
+  };
+
+  useEffect(() => {
+    const init = async () => {
+      try {
+        const stored = localStorage.getItem("dream_quest_session");
+        if (stored) {
+          setSessionId(stored);
+          await refreshState(stored);
+          setMessage("Fortsett questen din ✨");
+          return;
+        }
+        const data = await fetchJson("/api/dream/session", { method: "POST" });
+        setSessionId(data.sessionId);
+        localStorage.setItem("dream_quest_session", data.sessionId);
+        setState(data.state);
+        setMessage("Nytt eventyr startet!");
+      } catch {
+        setMessage("Kunne ikke koble til backend. Start server først.");
+      }
+    };
+    init();
+  }, []);
+
+  const move = async (dir) => {
+    if (!sessionId || loading) return;
+    setLoading(true);
+    try {
+      const data = await fetchJson(`/api/dream/move/${sessionId}`, {
+        method: "POST",
+        body: JSON.stringify({ dir }),
+      });
+      setState(data.state);
+      setMessage(data.message);
+    } catch {
+      setMessage("Kunne ikke flytte karakteren.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (!state) return;
+      if (e.key === "ArrowUp") move("up");
+      if (e.key === "ArrowDown") move("down");
+      if (e.key === "ArrowLeft") move("left");
+      if (e.key === "ArrowRight") move("right");
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [state, sessionId, loading]);
+
+  const interact = async (action = "interact") => {
+    if (!sessionId || loading) return;
+    setLoading(true);
+    try {
+      const data = await fetchJson(`/api/dream/interact/${sessionId}`, {
+        method: "POST",
+        body: JSON.stringify({ runeWord, action }),
+      });
+      setState(data.state);
+      setMessage(data.message);
+    } catch {
+      setMessage("Noe gikk galt med quest-action.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetQuest = async () => {
+    if (!sessionId || loading) return;
+    setLoading(true);
+    try {
+      const data = await fetchJson(`/api/dream/reset/${sessionId}`, { method: "POST" });
+      setState(data.state);
+      setMessage("Eventyret er resatt. Lykke til!");
+      setRuneWord("");
+    } catch {
+      setMessage("Kunne ikke resette eventyret.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const mapW = state?.world?.width || 11;
+  const mapH = state?.world?.height || 8;
+  const blocked = state?.world?.blocked || [];
+  const pois = state?.world?.pois || [];
+  const activeQuest = state?.quests?.find((q) => q.status === "active");
+  const isCompleted = Boolean(state?.completed);
+
+  const isBlocked = (x, y) => blocked.some(([bx, by]) => bx === x && by === y);
+  const poiAt = (x, y) => pois.find((p) => p.x === x && p.y === y);
+
+  return (
+    <div className="dream-screen">
+      <EmojiBackground />
+      <div className="love-inner">
+        <h1 className="fashion-title">🪞 Drømmespeilet Quest 🪞</h1>
+        <p className="fashion-sub">Utforsk verdenen, samle items, snakk med NPC-er og åpne Speilporten.</p>
+
+        <div className="love-card dream-card">
+          <div className="game-guide">
+            <strong>Hvordan spille:</strong> bruk piltaster/knapper for å flytte. På lokasjoner kan du bruke Snakk, Undersøk eller Bruk runeord.
+          </div>
+
+          <div className="dream-hud">
+            <span className="dream-hud-pill">🧭 Aktiv quest: {activeQuest ? activeQuest.title : "Ingen"}</span>
+            <span className="dream-hud-pill">👣 Steg: {state?.steps ?? 0}</span>
+            <span className="dream-hud-pill">🎒 Items: {state?.inventory?.length ?? 0}</span>
+          </div>
+
+          <div className="dream-map" role="img" aria-label="Kart i Drømmespeilet">
+            {Array.from({ length: mapH }).map((_, y) =>
+              Array.from({ length: mapW }).map((__, x) => {
+                const poi = poiAt(x, y);
+                const playerHere = state && state.player.x === x && state.player.y === y;
+                return (
+                  <div key={`${x}-${y}`} className={`dream-tile ${isBlocked(x, y) ? "blocked" : ""} ${playerHere ? "player-here" : ""}`}>
+                    {poi ? <span title={poi.label}>{poi.emoji}</span> : <span>·</span>}
+                    {playerHere && <span className="dream-player">🧚</span>}
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          <div className="dream-controls">
+            <button className="friendship-option-btn" onClick={() => move("up")} disabled={loading}>↑</button>
+            <div>
+              <button className="friendship-option-btn" onClick={() => move("left")} disabled={loading}>←</button>
+              <button className="friendship-option-btn" onClick={() => move("down")} disabled={loading}>↓</button>
+              <button className="friendship-option-btn" onClick={() => move("right")} disabled={loading}>→</button>
+            </div>
+          </div>
+
+          <input
+            className="setup-input"
+            placeholder="Runeord (brukes ved Speilporten)"
+            value={runeWord}
+            onChange={(e) => setRuneWord(e.target.value)}
+          />
+
+          <div className="dream-action-row">
+            <button className="start-btn" onClick={() => interact("talk")} disabled={loading}>Snakk 🗣️</button>
+            <button className="start-btn" onClick={() => interact("inspect")} disabled={loading}>Undersøk 🔍</button>
+            <button className="start-btn" onClick={() => interact("use-rune")} disabled={loading}>Bruk runeord 🔮</button>
+            <button className="makeup-clear-btn" onClick={resetQuest} disabled={loading}>Reset quest</button>
+          </div>
+
+          <p className="fortune-result dream-reading">{message}</p>
+
+          <div className="dream-columns">
+            <div className="dream-history">
+              <p className="fortune-result-title">Inventory</p>
+              {(state?.inventory?.length ?? 0) === 0 ? (
+                <div className="dream-history-item">Ingen items enda.</div>
+              ) : (
+                state.inventory.map((item) => (
+                  <div key={item} className="dream-history-item">💎 {item}</div>
+                ))
+              )}
+            </div>
+
+            <div className="dream-history">
+              <p className="fortune-result-title">Questlogg</p>
+              {state?.quests?.map((q) => (
+                <div key={q.id} className="dream-history-item">
+                  {q.status === "done" ? "✅" : q.status === "active" ? "🟣" : "🔒"} {q.title}
+                  <div className="dream-quest-desc">{q.description}</div>
+                </div>
+              ))}
+            </div>
+
+            <div className="dream-history">
+              <p className="fortune-result-title">Hendelser</p>
+              {state?.log?.map((row, i) => (
+                <div key={`${row}-${i}`} className="dream-history-item">• {row}</div>
+              ))}
+            </div>
+          </div>
+
+          {isCompleted && <p className="friendship-result">Du åpnet Drømmespeilet! 🌟</p>}
+
+          <div className="dream-legend">
+            {pois.map((p) => (
+              <span key={p.id} className="dream-legend-item">{p.emoji} {p.label}</span>
+            ))}
+          </div>
+
+          <div className="dream-history">
+            <p className="fortune-result-title">Questlogg</p>
+            <div className="dream-history-item">Tips: røde ruter er blokkert tåke og kan ikke passeres.</div>
+          </div>
+        </div>
+
+        <button className="start-btn fashion-back-btn" onClick={onBack}>← Tilbake</button>
+      </div>
+    </div>
+  );
+}
+
+// ── Star Persona Test ────────────────────────────────────────
+const STAR_QUESTIONS = [
+  {
+    q: "Hva velger du til en lørdag kveld?",
+    options: [
+      { t: "Glitterfest", type: "glam" },
+      { t: "Rolig filmkveld", type: "cozy" },
+      { t: "Kreativt prosjekt", type: "creative" },
+      { t: "Streetwalk + cafe", type: "cool" },
+    ],
+  },
+  {
+    q: "Favoritt-accessory?",
+    options: [
+      { t: "Statement smykke", type: "glam" },
+      { t: "Myk hoodie", type: "cozy" },
+      { t: "Fargerik hårklype", type: "creative" },
+      { t: "Sneakers", type: "cool" },
+    ],
+  },
+  {
+    q: "Hva poster du oftest?",
+    options: [
+      { t: "OOTD og glam", type: "glam" },
+      { t: "Hverdagsøyeblikk", type: "cozy" },
+      { t: "DIY/kunst", type: "creative" },
+      { t: "Trendy snapshots", type: "cool" },
+    ],
+  },
+];
+
+const STAR_RESULTS = {
+  glam: "Glam Muse 👑: Du elsker shine, statement looks og confident energi.",
+  cozy: "Soft Aura ☁️: Du bringer ro, varme og ekte nærhet.",
+  creative: "Dream Creator 🎨: Du er full av idéer, farger og originalitet.",
+  cool: "Street Icon 🖤: Du er trendy, selvstendig og effortless cool.",
+};
+
+function StarPersonaScreen({ onBack }) {
+  const [index, setIndex] = useState(0);
+  const [scores, setScores] = useState({ glam: 0, cozy: 0, creative: 0, cool: 0 });
+
+  const pick = (type) => {
+    setScores((prev) => ({ ...prev, [type]: prev[type] + 1 }));
+    setIndex((v) => v + 1);
+  };
+
+  const restart = () => {
+    setIndex(0);
+    setScores({ glam: 0, cozy: 0, creative: 0, cool: 0 });
+  };
+
+  const done = index >= STAR_QUESTIONS.length;
+  const winner = Object.entries(scores).sort((a, b) => b[1] - a[1])[0]?.[0] || "glam";
+
+  return (
+    <div className="love-screen">
+      <EmojiBackground />
+      <div className="love-inner">
+        <h1 className="fashion-title">🌟 Star Persona Test 🌟</h1>
+        <p className="fashion-sub">En klassisk Josefine-personlighetstest i ny drakt.</p>
+
+        {!done ? (
+          <div className="friendship-card">
+            <p className="friendship-step">Spørsmål {index + 1} / {STAR_QUESTIONS.length}</p>
+            <h3 className="friendship-question">{STAR_QUESTIONS[index].q}</h3>
+            <div className="friendship-options">
+              {STAR_QUESTIONS[index].options.map((opt) => (
+                <button key={opt.t} className="friendship-option-btn" onClick={() => pick(opt.type)}>
+                  {opt.t}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="friendship-card">
+            <p className="friendship-result">{STAR_RESULTS[winner]}</p>
+            <div className="stat-grid">
+              <p className="stat-pill">Glam: {scores.glam}</p>
+              <p className="stat-pill">Cozy: {scores.cozy}</p>
+              <p className="stat-pill">Creative: {scores.creative}</p>
+              <p className="stat-pill">Cool: {scores.cool}</p>
+            </div>
+            <button className="start-btn" onClick={restart}>Ta testen igjen</button>
+          </div>
+        )}
+
         <button className="start-btn fashion-back-btn" onClick={onBack}>← Tilbake</button>
       </div>
     </div>
