@@ -1921,7 +1921,12 @@ function DreamMirrorScreen({ onBack }) {
   const areaName = area?.name || "Ukjent omrade";
   const activeQuest = state?.quests?.find((q) => q.status === "active");
   const pendingDialog = state?.pendingDialog;
+  const ending = state?.ending || "";
   const isCompleted = Boolean(state?.completed);
+  const bossReady =
+    activeQuest?.id === "q4" &&
+    (state?.inventory || []).includes("Speilskar") &&
+    (state?.rewards?.stardust ?? 0) >= 20;
 
   const isBlocked = (x, y) => blocked.some(([bx, by]) => bx === x && by === y);
   const poiAt = (x, y) => pois.find((p) => p.x === x && p.y === y);
@@ -1957,7 +1962,7 @@ function DreamMirrorScreen({ onBack }) {
             ) : (
               profiles.map((p) => (
                 <span key={`${p.profileId}-${p.slot}`} className="dream-hud-pill">
-                  {p.profileName} · Slot {p.slot} · {p.completed ? "Fullfort" : `${p.steps} steg`}
+                  {p.profileName} · Slot {p.slot} · {p.completed ? `Fullfort (${p.ending || "ukjent ending"})` : `${p.steps} steg`}
                 </span>
               ))
             )}
@@ -1974,6 +1979,7 @@ function DreamMirrorScreen({ onBack }) {
             <span className="dream-hud-pill">🎒 Items: {state?.inventory?.length ?? 0}</span>
             <span className="dream-hud-pill">✨ Stjernestov: {state?.rewards?.stardust ?? 0}</span>
             <span className="dream-hud-pill">💞 Affinity: {state?.rewards?.affinity ?? 0}</span>
+            <span className="dream-hud-pill">👑 Bossprove: {bossReady ? "Klar" : "Ikke klar"}</span>
           </div>
 
           <div className="dream-map dream-map-3d" role="img" aria-label="Kart i Drømmespeilet" style={{ gridTemplateColumns: `repeat(${mapW}, 1fr)` }}>
@@ -2066,7 +2072,11 @@ function DreamMirrorScreen({ onBack }) {
             </div>
           </div>
 
-          {isCompleted && <p className="friendship-result">Du åpnet Drømmespeilet! 🌟</p>}
+          {isCompleted && (
+            <p className="friendship-result">
+              Du åpnet Drømmespeilet! 🌟 Ending: {ending || "ukjent"}
+            </p>
+          )}
 
           <div className="dream-legend">
             {pois.map((p) => (
@@ -2079,6 +2089,7 @@ function DreamMirrorScreen({ onBack }) {
             <div className="dream-history-item">Tips: røde ruter er blokkert tåke og kan ikke passeres.</div>
             <div className="dream-history-item">Tips: ved portal-ruter ma du trykke "Reis portal".</div>
             <div className="dream-history-item">Tips: dialogvalg gir ulike mengder rewards.</div>
+            <div className="dream-history-item">Tips: mirror-trial har flere endings avhengig av valgene dine.</div>
             {profileId && <div className="dream-history-item">Profil-ID: {profileId}</div>}
           </div>
         </div>

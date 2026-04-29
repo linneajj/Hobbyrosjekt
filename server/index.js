@@ -131,14 +131,48 @@ const DIALOG_TREES = {
         {
           id: "brave",
           label: "Jeg er klar for alt. Test meg.",
-          effects: { affinity: 2, stardust: 5, item: "Maneblomst", completeQuest: "q1" },
-          nextMessage: "Vokteren smiler: mot blir belonnet. Du far Maneblomst.",
+          nextNodeId: "brave-2",
+          nextMessage: "Vokteren ler mykt: da far du en siste prove.",
         },
         {
           id: "kind",
           label: "Kan du lare meg veien med ro og visdom?",
-          effects: { affinity: 1, stardust: 15, item: "Maneblomst", completeQuest: "q1" },
-          nextMessage: "Vokteren nikker: mildhet gir stjernestov. Du far Maneblomst.",
+          nextNodeId: "kind-2",
+          nextMessage: "Vokteren nikker: visdom trenger ogsa handling.",
+        },
+      ],
+    },
+    "brave-2": {
+      text: "Du star mellom to lysninger. Hva velger du?",
+      choices: [
+        {
+          id: "storm-path",
+          label: "Stormstien: kort vei, stor risiko.",
+          effects: { affinity: 3, stardust: 8, item: "Maneblomst", completeQuest: "q1" },
+          nextMessage: "Du trosset stormen. Vokteren gir deg Maneblomst.",
+        },
+        {
+          id: "guard-path",
+          label: "Skjoldstien: tryggere men lengre.",
+          effects: { affinity: 1, stardust: 14, item: "Maneblomst", completeQuest: "q1" },
+          nextMessage: "Du valgte balanse. Vokteren gir deg Maneblomst og ekstra stov.",
+        },
+      ],
+    },
+    "kind-2": {
+      text: "Hvem setter du forst i en usikker natt?",
+      choices: [
+        {
+          id: "others-first",
+          label: "Jeg passer pa de andre forst.",
+          effects: { affinity: 4, stardust: 6, item: "Maneblomst", completeQuest: "q1" },
+          nextMessage: "Vokteren smiler: hjertet ditt er kompasset. Du far Maneblomst.",
+        },
+        {
+          id: "self-first",
+          label: "Jeg stabiliserer meg selv forst.",
+          effects: { affinity: 2, stardust: 10, item: "Maneblomst", completeQuest: "q1" },
+          nextMessage: "Vokteren svarer: klarhet starter innenfra. Du far Maneblomst.",
         },
       ],
     },
@@ -150,14 +184,103 @@ const DIALOG_TREES = {
         {
           id: "focus",
           label: "Jeg fokuserer pa kart og retning.",
-          effects: { affinity: 1, stardust: 10, item: "Stjernekompass", completeQuest: "q2" },
-          nextMessage: "Orakelet aktiverer kompasset ditt.",
+          nextNodeId: "focus-2",
+          nextMessage: "Orakelet peker mot stjernene over deg.",
         },
         {
           id: "intuition",
           label: "Jeg folger intuisjonen og hjertet.",
-          effects: { affinity: 3, stardust: 2, item: "Stjernekompass", completeQuest: "q2" },
-          nextMessage: "Orakelet sier: intuisjon er ogsa navigasjon.",
+          nextNodeId: "intuition-2",
+          nextMessage: "Orakelet lukker oynene og lytter til rytmen din.",
+        },
+      ],
+    },
+    "focus-2": {
+      text: "Kompasset mangler en akse. Hva prioriterer du?",
+      choices: [
+        {
+          id: "speed",
+          label: "Hastighet - jeg vil fram raskt.",
+          effects: { affinity: 1, stardust: 12, item: "Stjernekompass", completeQuest: "q2" },
+          nextMessage: "Kompasset lyser skarpt. Du far Stjernekompass.",
+        },
+        {
+          id: "precision",
+          label: "Presisjon - jeg vil velge rett.",
+          effects: { affinity: 2, stardust: 9, item: "Stjernekompass", completeQuest: "q2" },
+          nextMessage: "Kompasset far en rolig glod. Du far Stjernekompass.",
+        },
+      ],
+    },
+    "intuition-2": {
+      text: "Hva stoler du mest pa i morket?",
+      choices: [
+        {
+          id: "pulse",
+          label: "Pusten og pulsen min.",
+          effects: { affinity: 4, stardust: 4, item: "Stjernekompass", completeQuest: "q2" },
+          nextMessage: "Orakelet hvisker: du horer verden godt. Du far Stjernekompass.",
+        },
+        {
+          id: "echo",
+          label: "Ekkoet av andres spor.",
+          effects: { affinity: 2, stardust: 8, item: "Stjernekompass", completeQuest: "q2" },
+          nextMessage: "Orakelet svarer: du leser sporene riktig. Du far Stjernekompass.",
+        },
+      ],
+    },
+  },
+  mirrorTrial: {
+    start: {
+      text: "Speildronningen trer frem. Hvordan moter du siste prove?",
+      choices: [
+        {
+          id: "duel",
+          label: "Duel: bryt illusjonen med styrke.",
+          effects: { stardust: -5, affinity: 1 },
+          nextNodeId: "duel-end",
+          nextMessage: "Speilet splintres i gnister.",
+        },
+        {
+          id: "empathy",
+          label: "Empati: forsta frykten i speilet.",
+          effects: { stardust: -2, affinity: 3 },
+          nextNodeId: "empathy-end",
+          nextMessage: "Speilet blir rolig og klart.",
+        },
+      ],
+    },
+    "duel-end": {
+      text: "Du vant pa kraft. Hva onsker du av speilet?",
+      choices: [
+        {
+          id: "crown",
+          label: "En stjernekrona og seier.",
+          effects: { ending: "Nova Crown", completeQuest: "q4" },
+          nextMessage: "Du fikk Nova Crown-endingen.",
+        },
+        {
+          id: "wander",
+          label: "En ny sti videre i drommeland.",
+          effects: { ending: "Wandering Flame", completeQuest: "q4" },
+          nextMessage: "Du fikk Wandering Flame-endingen.",
+        },
+      ],
+    },
+    "empathy-end": {
+      text: "Speilet velger a stole pa deg. Hva lover du tilbake?",
+      choices: [
+        {
+          id: "guardian",
+          label: "Jeg vokter over andre drommere.",
+          effects: { ending: "Moon Guardian", completeQuest: "q4" },
+          nextMessage: "Du fikk Moon Guardian-endingen.",
+        },
+        {
+          id: "artist",
+          label: "Jeg skaper lys gjennom kreativitet.",
+          effects: { ending: "Prism Artist", completeQuest: "q4" },
+          nextMessage: "Du fikk Prism Artist-endingen.",
         },
       ],
     },
@@ -195,6 +318,7 @@ function newState() {
       affinity: 0,
       stardust: 0,
     },
+    ending: "",
     steps: 0,
     completed: false,
     pendingDialog: null,
@@ -315,6 +439,7 @@ app.get("/api/dream/profiles", (req, res) => {
     completed: Boolean(p.state.completed),
     steps: p.state.steps,
     areaId: p.state.areaId,
+    ending: p.state.ending || "",
     stardust: p.state.rewards?.stardust || 0,
     affinity: p.state.rewards?.affinity || 0,
   }));
@@ -398,9 +523,23 @@ app.post("/api/dream/move/:sessionId", (req, res) => {
   res.json({ state: publicState(state), message });
 });
 
-function applyDialogChoice(state, poiId, choiceId) {
-  const tree = DIALOG_TREES[poiId];
-  if (!tree || !state.pendingDialog) return null;
+function openDialogNode(state, dialogId, nodeId, openingMessage = "") {
+  const tree = DIALOG_TREES[dialogId];
+  if (!tree || !tree[nodeId]) return null;
+  const node = tree[nodeId];
+  state.pendingDialog = {
+    dialogId,
+    nodeId,
+    text: node.text,
+    choices: node.choices,
+  };
+  return openingMessage || node.text;
+}
+
+function applyDialogChoice(state, choiceId) {
+  if (!state.pendingDialog) return null;
+  const tree = DIALOG_TREES[state.pendingDialog.dialogId];
+  if (!tree) return null;
   const node = tree[state.pendingDialog.nodeId];
   if (!node) return null;
   const selected = node.choices.find((c) => c.id === choiceId);
@@ -411,18 +550,20 @@ function applyDialogChoice(state, poiId, choiceId) {
   if (effects.affinity) state.rewards.affinity += effects.affinity;
   if (effects.stardust) state.rewards.stardust += effects.stardust;
   if (effects.completeQuest) completeQuest(state, effects.completeQuest);
+  if (effects.ending) state.ending = effects.ending;
+
+  if (state.rewards.stardust < 0) state.rewards.stardust = 0;
+
+  if (selected.nextNodeId) {
+    return openDialogNode(state, state.pendingDialog.dialogId, selected.nextNodeId, selected.nextMessage);
+  }
 
   state.pendingDialog = null;
   return selected.nextMessage || "Valget ditt endret skjebnen.";
 }
 
-function startDialog(state, poiId) {
-  const tree = DIALOG_TREES[poiId];
-  if (!tree) return null;
-  const nodeId = "start";
-  const node = tree[nodeId];
-  state.pendingDialog = { poiId, nodeId, text: node.text, choices: node.choices };
-  return node.text;
+function startDialog(state, dialogId) {
+  return openDialogNode(state, dialogId, "start");
 }
 
 app.post("/api/dream/interact/:sessionId", (req, res) => {
@@ -434,7 +575,16 @@ app.post("/api/dream/interact/:sessionId", (req, res) => {
 
   if (!quest) {
     state.completed = true;
-    const message = "Alle quests er ferdige. Du har mestret Drømmespeilet!";
+    const message = `Alle quests er ferdige. Ending: ${state.ending || "Unknown"}.`;
+    pushLog(state, message);
+    saveSessionToProfile(req.params.sessionId);
+    return res.json({ state: publicState(state), message });
+  }
+
+  if (choiceId && state.pendingDialog) {
+    const outcome = applyDialogChoice(state, choiceId);
+    const message = outcome || "Valget ble ikke gjenkjent.";
+    if (state.quests.every((q) => q.status === "done")) state.completed = true;
     pushLog(state, message);
     saveSessionToProfile(req.params.sessionId);
     return res.json({ state: publicState(state), message });
@@ -450,73 +600,13 @@ app.post("/api/dream/interact/:sessionId", (req, res) => {
 
   let message = "Ingenting skjedde akkurat nå.";
 
-  if (poi.id === "forest") {
-    if (quest.id === "q1") {
-      if (choiceId) {
-        const outcome = applyDialogChoice(state, "forest", choiceId);
-        message = outcome || "Valget ble ikke gjenkjent.";
-      } else {
-        message = startDialog(state, "forest") || "Vokteren er stille akkurat na.";
-      }
-    } else {
-      message = "Vokteren hvisker: Følg lyset videre mot tempelet.";
-    }
-  }
-
-  if (poi.id === "temple") {
-    if (quest.id === "q2") {
-      if (!hasItem(state, "Maneblomst")) {
-        message = "Orakelet venter på Måneblomst før det kan hjelpe deg.";
-      } else if (choiceId) {
-        const outcome = applyDialogChoice(state, "temple", choiceId);
-        message = outcome || "Valget ble ikke gjenkjent.";
-      } else {
-        message = startDialog(state, "temple") || "Orakelet er stille.";
-      }
-    } else {
-      message = "Måneorakelet: Stol på intuisjonen din.";
-    }
-  }
-
-  if (poi.id === "lake-core") {
-    if (quest.id === "q3") {
-      if (!hasItem(state, "Stjernekompass")) {
-        message = "Vannet er uklart. Du trenger Stjernekompass for å finne skåren.";
-      } else {
-        addItem(state, "Speilskar");
-        state.rewards.stardust += 10;
-        completeQuest(state, "q3");
-        message = "Du fant en Speilskår i vannet 💎. Speilporten venter.";
-      }
-    } else {
-      message = "Stjernesjøen glitrer rolig.";
-    }
-  }
-
-  if (poi.id === "mirror") {
-    if (quest.id === "q4") {
-      const validRune = runeWord.trim().toLowerCase();
-      if (!hasItem(state, "Speilskar")) {
-        message = "Porten er lukket. Du mangler Speilskår.";
-      } else if (action !== "use-rune") {
-        message = "Speilporten vibrerer. Prøv handlingen 'bruk runeord'.";
-      } else if (validRune.length < 3) {
-        message = "Runeordet er for svakt. Skriv minst 3 bokstaver.";
-      } else if ((state.rewards.stardust || 0) < 20) {
-        message = "Speilporten krever mer stjernestov. Velg klokt i dialogene dine.";
-      } else {
-        completeQuest(state, "q4");
-        state.completed = true;
-        message = `Speilporten åpnes med runeordet "${runeWord}"! Eventyret er fullført 🌟`;
-      }
-    } else {
-      message = "Speilporten pulserer med stille lys.";
-    }
-  }
-
   if (poi.type === "portal") {
     if (action !== "travel") {
       message = "Dette er en portal. Bruk handlingen 'Reis'.";
+    } else if (poi.id === "portal-temple" && !hasItem(state, "Maneblomst")) {
+      message = "Portalen avviser deg. Du ma fullfore skogtesten forst.";
+    } else if (poi.id === "portal-lake" && !hasItem(state, "Stjernekompass")) {
+      message = "Portalen flimrer. Du trenger Stjernekompass for a finne riktig frekvens.";
     } else {
       const nextArea = getArea(poi.targetAreaId);
       state.areaId = nextArea.id;
@@ -525,6 +615,62 @@ app.post("/api/dream/interact/:sessionId", (req, res) => {
       message = `Portalhopp fullfort! Du er na i ${nextArea.name}.`;
     }
   }
+
+  if (poi.id === "forest") {
+    if (quest.id === "q1") {
+      message = startDialog(state, "forest") || "Vokteren er stille akkurat na.";
+    } else {
+      message = "Vokteren hvisker: Speilet ser alt du velger.";
+    }
+  }
+
+  if (poi.id === "temple") {
+    if (quest.id === "q2") {
+      if (!hasItem(state, "Maneblomst")) {
+        message = "Orakelet venter pa Maneblomst for det kan hjelpe deg.";
+      } else {
+        message = startDialog(state, "temple") || "Orakelet er stille.";
+      }
+    } else {
+      message = "Maneorakelet: Balanse gir den sterkeste slutten.";
+    }
+  }
+
+  if (poi.id === "lake-core") {
+    if (quest.id === "q3") {
+      if (!hasItem(state, "Stjernekompass")) {
+        message = "Vannet er uklart. Du trenger Stjernekompass for a finne skaren.";
+      } else {
+        addItem(state, "Speilskar");
+        state.rewards.stardust += 10;
+        completeQuest(state, "q3");
+        message = "Du fant en Speilskar i vannet. Speilporten venter.";
+      }
+    } else {
+      message = "Stjernesjoen glitrer rolig.";
+    }
+  }
+
+  if (poi.id === "mirror") {
+    if (quest.id === "q4") {
+      const validRune = runeWord.trim().toLowerCase();
+      if (!hasItem(state, "Speilskar")) {
+        message = "Porten er lukket. Du mangler Speilskar.";
+      } else if (action !== "use-rune") {
+        message = "Speilporten vibrerer. Bruk runeord for a starte bossproven.";
+      } else if (validRune.length < 3) {
+        message = "Runeordet er for svakt. Skriv minst 3 bokstaver.";
+      } else if ((state.rewards.stardust || 0) < 20) {
+        message = "Speilporten krever mer stjernestov. Utforsk og velg klokt i dialogene.";
+      } else {
+        message = startDialog(state, "mirrorTrial") || "Speilet avviser proven akkurat na.";
+      }
+    } else {
+      message = "Speilporten pulserer med stille lys.";
+    }
+  }
+
+  if (state.quests.every((q) => q.status === "done")) state.completed = true;
 
   pushLog(state, message);
   saveSessionToProfile(req.params.sessionId);
