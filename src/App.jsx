@@ -1939,6 +1939,12 @@ function DreamMirrorScreen({ onBack }) {
         <p className="fashion-sub">Cinematic 3D-feel i full opplosning: utforsk soner, dialogvalg og ekte quest-progresjon.</p>
 
         <div className="love-card dream-card">
+          <div className="dream-atmosphere" aria-hidden="true">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <span key={i} className="dream-mote" style={{ "--i": i }} />
+            ))}
+          </div>
+
           <div className="dream-profile-row">
             <input
               className="setup-input"
@@ -1979,16 +1985,23 @@ function DreamMirrorScreen({ onBack }) {
             <span className="dream-hud-pill">🎒 Items: {state?.inventory?.length ?? 0}</span>
             <span className="dream-hud-pill">✨ Stjernestov: {state?.rewards?.stardust ?? 0}</span>
             <span className="dream-hud-pill">💞 Affinity: {state?.rewards?.affinity ?? 0}</span>
-            <span className="dream-hud-pill">👑 Bossprove: {bossReady ? "Klar" : "Ikke klar"}</span>
+            <span className={`dream-hud-pill ${bossReady ? "ready" : "not-ready"}`}>
+              👑 Bossprove: {bossReady ? "Klar" : "Ikke klar"}
+            </span>
           </div>
 
-          <div className="dream-map dream-map-3d" role="img" aria-label="Kart i Drømmespeilet" style={{ gridTemplateColumns: `repeat(${mapW}, 1fr)` }}>
+          <div className="dream-map" role="img" aria-label="Kart i Drømmespeilet" style={{ gridTemplateColumns: `repeat(${mapW}, 1fr)` }}>
             {Array.from({ length: mapH }).map((_, y) =>
               Array.from({ length: mapW }).map((__, x) => {
                 const poi = poiAt(x, y);
                 const playerHere = state && state.player.x === x && state.player.y === y;
+                const poiClass = poi ? `poi-${poi.type || "base"}` : "";
                 return (
-                  <div key={`${x}-${y}`} className={`dream-tile ${isBlocked(x, y) ? "blocked" : ""} ${playerHere ? "player-here" : ""} ${poi ? "poi" : ""}`}>
+                  <div
+                    key={`${x}-${y}`}
+                    className={`dream-tile ${isBlocked(x, y) ? "blocked" : ""} ${playerHere ? "player-here" : ""} ${poi ? "poi" : ""} ${poiClass}`}
+                    style={{ "--tile-index": y * mapW + x }}
+                  >
                     {poi ? <span title={poi.label}>{poi.emoji}</span> : <span>·</span>}
                     {playerHere && <span className="dream-player">🧚‍♀️</span>}
                   </div>
@@ -2057,7 +2070,7 @@ function DreamMirrorScreen({ onBack }) {
             <div className="dream-history">
               <p className="fortune-result-title">Questlogg</p>
               {state?.quests?.map((q) => (
-                <div key={q.id} className="dream-history-item">
+                <div key={q.id} className={`dream-history-item quest-${q.status}`}>
                   {q.status === "done" ? "✅" : q.status === "active" ? "🟣" : "🔒"} {q.title}
                   <div className="dream-quest-desc">{q.description}</div>
                 </div>
@@ -2073,7 +2086,7 @@ function DreamMirrorScreen({ onBack }) {
           </div>
 
           {isCompleted && (
-            <p className="friendship-result">
+            <p className="friendship-result dream-ending-badge">
               Du åpnet Drømmespeilet! 🌟 Ending: {ending || "ukjent"}
             </p>
           )}
