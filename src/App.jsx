@@ -86,7 +86,7 @@ function EmojiBackground() {
 }
 
 // ── Setup Screen ──────────────────────────────────────────────
-function SetupScreen({ onStart, onFashion, onMakeup }) {
+function SetupScreen({ onStart, onBackHub }) {
   const [names, setNames] = useState(["", ""]);
   const [emojis] = useState(["💖", "💜"]);
 
@@ -138,14 +138,9 @@ function SetupScreen({ onStart, onFashion, onMakeup }) {
         </button>
       </div>
 
-      <div className="entry-btns">
-        <button className="fashion-entry-btn" onClick={onFashion}>
-          👗 Kle på mannekeng!
-        </button>
-        <button className="fashion-entry-btn makeup-entry-btn" onClick={onMakeup}>
-          💄 Makeup Studio!
-        </button>
-      </div>
+      <button className="fashion-entry-btn hub-entry-btn" onClick={onBackHub}>
+        ← Til Cute Play Hub
+      </button>
     </div>
   );
 }
@@ -193,7 +188,7 @@ function WinnerScreen({ teamNames, scores, onRestart }) {
 
 // ── Main App ──────────────────────────────────────────────────
 function App() {
-  const [phase, setPhase] = useState("setup"); // "setup" | "game" | "winner"
+  const [phase, setPhase] = useState("hub"); // "hub" | "setup" | "game" | "winner"
   const [teamNames, setTeamNames] = useState(["Lag 1", "Lag 2"]);
   const [scores, setScores] = useState([0, 0]);
   const [activeTeam, setActiveTeam] = useState(0);
@@ -280,10 +275,15 @@ function App() {
   const effectiveValue = getEffectiveValue();
   const ddWagerValid = isDailyDouble && parseInt(ddWager, 10) > 0;
 
-  if (phase === "setup") return <SetupScreen onStart={startGame} onFashion={() => setPhase("fashion")} onMakeup={() => setPhase("makeup")} />;
+  if (phase === "setup") return <SetupScreen onStart={startGame} onBackHub={() => setPhase("hub")} />;
+  if (phase === "hub") return <PlayHubScreen onOpen={(page) => setPhase(page)} />;
   if (phase === "winner") return <WinnerScreen teamNames={teamNames} scores={scores} onRestart={restartGame} />;
-  if (phase === "fashion") return <FashionScreen onBack={() => setPhase("setup")} />;
-  if (phase === "makeup") return <MakeupScreen onBack={() => setPhase("setup")} />;
+  if (phase === "fashion") return <FashionScreen onBack={() => setPhase("hub")} />;
+  if (phase === "makeup") return <MakeupScreen onBack={() => setPhase("hub")} />;
+  if (phase === "nails") return <NailScreen onBack={() => setPhase("hub")} />;
+  if (phase === "fortune") return <FortuneWheelScreen onBack={() => setPhase("hub")} />;
+  if (phase === "stickers") return <StickerBookScreen onBack={() => setPhase("hub")} />;
+  if (phase === "quiz") return <FriendshipQuizScreen onBack={() => setPhase("hub")} />;
 
   return (
     <div className="jeopardy-app">
@@ -310,7 +310,7 @@ function App() {
           </div>
           <p className="progress-label">{answeredCount}/{totalClues} spørsmål</p>
           <button className="reset-btn" onClick={restartGame}>Nytt spill</button>
-          <button className="reset-btn fashion-game-btn" onClick={() => setPhase("fashion")}>👗 Mannekeng</button>
+          <button className="reset-btn fashion-game-btn" onClick={() => setPhase("hub")}>← Cute Play Hub</button>
         </div>
       </div>
 
@@ -728,10 +728,14 @@ function MakeupScreen({ onBack }) {
   const canvasRef = useRef(null);
   const [activeTool, setActiveTool] = useState("blush");
   const [toolColors, setToolColors] = useState({});
+  const [brushScale, setBrushScale] = useState(1);
   const isDrawingRef = useRef(false);
   const lastPosRef = useRef(null);
   const activeToolRef = useRef("blush");
   const toolColorsRef = useRef({});
+  const brushScaleRef = useRef(1);
+
+  const changeBrushScale = (v) => { setBrushScale(v); brushScaleRef.current = v; };
 
   const toolMap = Object.fromEntries(MAKEUP_TOOLS.map(t => [t.id, t]));
 
@@ -765,29 +769,31 @@ function MakeupScreen({ onBack }) {
     const tool = toolMap[toolId];
     const color = getActiveColor(toolId);
 
+    const sz = tool.size * brushScaleRef.current;
     if (color === "erase") {
       ctx.save();
       ctx.globalCompositeOperation = "destination-out";
       ctx.beginPath();
-      ctx.arc(pos.x, pos.y, tool.size, 0, Math.PI * 2);
+      ctx.arc(pos.x, pos.y, sz, 0, Math.PI * 2);
       ctx.fillStyle = "rgba(0,0,0,1)";
       ctx.fill();
       ctx.restore();
     } else if (tool.glitter) {
+      const spread = 25 * brushScaleRef.current;
       for (let i = 0; i < 10; i++) {
-        const rx = pos.x + (Math.random() - 0.5) * 50;
-        const ry = pos.y + (Math.random() - 0.5) * 50;
+        const rx = pos.x + (Math.random() - 0.5) * spread * 2;
+        const ry = pos.y + (Math.random() - 0.5) * spread * 2;
         ctx.beginPath();
-        ctx.arc(rx, ry, Math.random() * 3 + 0.5, 0, Math.PI * 2);
+        ctx.arc(rx, ry, Math.random() * 3 * brushScaleRef.current + 0.5, 0, Math.PI * 2);
         ctx.fillStyle = color;
         ctx.fill();
       }
     } else if (tool.soft) {
-      const grad = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, tool.size);
+      const grad = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, sz);
       grad.addColorStop(0, color);
       grad.addColorStop(1, "rgba(0,0,0,0)");
       ctx.beginPath();
-      ctx.arc(pos.x, pos.y, tool.size, 0, Math.PI * 2);
+      ctx.arc(pos.x, pos.y, sz, 0, Math.PI * 2);
       ctx.fillStyle = grad;
       ctx.fill();
     } else {
@@ -796,7 +802,7 @@ function MakeupScreen({ onBack }) {
       ctx.moveTo(last.x, last.y);
       ctx.lineTo(pos.x, pos.y);
       ctx.strokeStyle = color;
-      ctx.lineWidth = tool.size;
+      ctx.lineWidth = sz;
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
       ctx.stroke();
@@ -861,6 +867,22 @@ function MakeupScreen({ onBack }) {
                 )}
               </div>
             ))}
+            <div className="brush-size-wrap">
+              <label className="brush-size-label">🖌️ Størrelse</label>
+              <input
+                type="range"
+                min="0.3"
+                max="3"
+                step="0.1"
+                value={brushScale}
+                onChange={(e) => changeBrushScale(parseFloat(e.target.value))}
+                className="brush-size-slider"
+              />
+              <span className="brush-size-preview" style={{
+                width: `${Math.round(12 * brushScale)}px`,
+                height: `${Math.round(12 * brushScale)}px`,
+              }} />
+            </div>
             <button className="makeup-clear-btn" onClick={clearCanvas}>🗑️ Fjern alt</button>
           </div>
 
@@ -951,6 +973,490 @@ function MakeupScreen({ onBack }) {
           </div>
         </div>
 
+        <button className="start-btn fashion-back-btn" onClick={onBack}>← Tilbake</button>
+      </div>
+    </div>
+  );
+}
+
+// ── Nail Studio ───────────────────────────────────────────────
+const NAIL_SHAPES = [
+  { id: "round",    label: "Round 🔵" },
+  { id: "oval",     label: "Oval 🥚" },
+  { id: "square",   label: "Square ⬜" },
+  { id: "squoval",  label: "Squoval ▱" },
+  { id: "almond",   label: "Almond 🌰" },
+  { id: "coffin",   label: "Coffin 🪦" },
+  { id: "stiletto", label: "Stiletto 💅" },
+];
+
+const POLISH_COLORS = [
+  "#e91e8c","#f48fb1","#f44336","#ff7043","#ff9800",
+  "#ffd700","#c5e1a5","#26c6da","#42a5f5","#5c6bc0",
+  "#ce93d8","#bcaaa4","#212121","#795548","#ff80ab",
+  "#b2dfdb","#fff9c4","#ffe0b2","#c8e6c9","#e1bee7",
+  "#ffffff","transparent",
+];
+
+const NAIL_STICKERS = ["⭐","🌈","🩷","💎","🌸","✨","🦋","🌺","💫","🎀","🌙","❤️","🍓","🌷","💜","🔮","🐝","🌊","🫧","🪩"];
+
+// Nail base positions: cx = centre-x, baseY = cuticle y, w = width, h = height
+const LEFT_NAIL_POS = [
+  { cx: 70,  baseY: 210, w: 17, h: 26 }, // thumb
+  { cx: 107, baseY: 152, w: 19, h: 32 }, // index
+  { cx: 142, baseY: 136, w: 21, h: 36 }, // middle
+  { cx: 176, baseY: 144, w: 19, h: 32 }, // ring
+  { cx: 205, baseY: 169, w: 15, h: 26 }, // pinky
+];
+const RIGHT_NAIL_POS = [
+  { cx: 570, baseY: 210, w: 17, h: 26 },
+  { cx: 533, baseY: 152, w: 19, h: 32 },
+  { cx: 498, baseY: 136, w: 21, h: 36 },
+  { cx: 464, baseY: 144, w: 19, h: 32 },
+  { cx: 435, baseY: 169, w: 15, h: 26 },
+];
+
+function nailPath(cx, baseY, w, h, shape) {
+  const x0 = cx - w / 2, x1 = cx + w / 2, y1 = baseY - h, r = w / 2;
+  switch (shape) {
+    case "square":
+      return `M${x0},${baseY} L${x0},${y1} L${x1},${y1} L${x1},${baseY} Z`;
+    case "round":
+      return `M${x0},${baseY} L${x0},${y1+r} A${r},${r} 0 0,1 ${x1},${y1+r} L${x1},${baseY} Z`;
+    case "oval": {
+      const ry = r * 1.6;
+      return `M${x0},${baseY} L${x0},${y1+ry} A${r},${ry} 0 0,1 ${x1},${y1+ry} L${x1},${baseY} Z`;
+    }
+    case "squoval": {
+      const rc = w * 0.22;
+      return `M${x0},${baseY} L${x0},${y1+rc} Q${x0},${y1} ${x0+rc},${y1} L${x1-rc},${y1} Q${x1},${y1} ${x1},${y1+rc} L${x1},${baseY} Z`;
+    }
+    case "almond":
+      return `M${x0},${baseY} L${x0},${y1+h*0.42} Q${cx-w*0.04},${y1-h*0.04} ${cx},${y1} Q${cx+w*0.04},${y1-h*0.04} ${x1},${y1+h*0.42} L${x1},${baseY} Z`;
+    case "coffin": {
+      const tw = w * 0.52, tx0 = cx - tw/2, tx1 = cx + tw/2;
+      return `M${x0},${baseY} L${x0},${y1+h*0.24} L${tx0},${y1} L${tx1},${y1} L${x1},${y1+h*0.24} L${x1},${baseY} Z`;
+    }
+    case "stiletto":
+      return `M${x0},${baseY} L${x0},${y1+h*0.33} L${cx},${y1} L${x1},${y1+h*0.33} L${x1},${baseY} Z`;
+    default:
+      return `M${x0},${baseY} L${x0},${y1} L${x1},${y1} L${x1},${baseY} Z`;
+  }
+}
+
+function nailGleam(cx, baseY, w, h) {
+  const hw = w * 0.32, hx = cx - hw / 2, hy = baseY - h * 0.72;
+  return `M${hx},${hy + h*0.22} Q${cx},${hy} ${hx+hw},${hy + h*0.22} Z`;
+}
+
+const SKIN    = "#fde4c8";
+const SKIN_SH = "#f0c090";
+const NAIL_BG = "#fce4ec";
+
+function NailScreen({ onBack }) {
+  const [shape, setShape]           = useState("round");
+  const [tool, setTool]             = useState("polish");
+  const [polishColor, setPolishColor] = useState("#e91e8c");
+  const [sticker, setSticker]       = useState("⭐");
+  const [nailColors, setNailColors] = useState(() => Array(10).fill("transparent"));
+  const [nailStickers, setNailStickers] = useState(() => Array(10).fill(null).map(() => []));
+  const svgRef = useRef(null);
+
+  const toSvgPt = (e) => {
+    const svg = svgRef.current;
+    const rect = svg.getBoundingClientRect();
+    return {
+      x: ((e.clientX - rect.left) / rect.width)  * 640,
+      y: ((e.clientY - rect.top)  / rect.height) * 380,
+    };
+  };
+
+  const handleNail = (idx, e) => {
+    e.stopPropagation();
+    if (tool === "polish") {
+      setNailColors(prev => prev.map((c, i) => i === idx ? polishColor : c));
+    } else {
+      const pt = toSvgPt(e);
+      setNailStickers(prev => prev.map((arr, i) => i === idx ? [...arr, { emoji: sticker, x: pt.x, y: pt.y }] : arr));
+    }
+  };
+
+  const clearAll = () => {
+    setNailColors(Array(10).fill("transparent"));
+    setNailStickers(Array(10).fill(null).map(() => []));
+  };
+
+  const allNails = [...LEFT_NAIL_POS, ...RIGHT_NAIL_POS];
+
+  return (
+    <div className="nail-screen">
+      <EmojiBackground />
+      <div className="nail-inner">
+        <h1 className="fashion-title">💅 Nail Studio 💅</h1>
+        <p className="fashion-sub">Velg form, farge og klistremerker!</p>
+
+        <div className="nail-layout">
+
+          {/* ── CONTROLS ── */}
+          <div className="nail-controls">
+            <div className="nail-section-title">💅 Negleform</div>
+            <div className="nail-shape-grid">
+              {NAIL_SHAPES.map(s => (
+                <button key={s.id} className={`nail-shape-btn ${shape === s.id ? "active" : ""}`} onClick={() => setShape(s.id)}>
+                  {s.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="nail-section-title" style={{ marginTop: "14px" }}>🖌️ Verktøy</div>
+            <div className="nail-tool-row">
+              <button className={`nail-tool-btn ${tool === "polish" ? "active" : ""}`} onClick={() => setTool("polish")}>💅 Neglelakk</button>
+              <button className={`nail-tool-btn ${tool === "sticker" ? "active" : ""}`} onClick={() => setTool("sticker")}>⭐ Klistremerke</button>
+            </div>
+
+            {tool === "polish" && (
+              <>
+                <div className="nail-section-title" style={{ marginTop: "10px" }}>🎨 Farge</div>
+                <div className="nail-color-grid">
+                  {POLISH_COLORS.map((c, i) => (
+                    <button
+                      key={i}
+                      className={`nail-color-swatch ${polishColor === c ? "selected" : ""}`}
+                      style={{
+                        background: c === "transparent"
+                          ? "linear-gradient(135deg,#fff 45%,#f9a 45%)"
+                          : c,
+                        border: (c === "#ffffff" || c === "transparent") ? "1.5px solid #ddd" : "none",
+                      }}
+                      onClick={() => setPolishColor(c)}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+
+            {tool === "sticker" && (
+              <>
+                <div className="nail-section-title" style={{ marginTop: "10px" }}>✨ Klistremerke</div>
+                <div className="nail-sticker-grid">
+                  {NAIL_STICKERS.map((s, i) => (
+                    <button key={i} className={`nail-sticker-btn ${sticker === s ? "active" : ""}`} onClick={() => setSticker(s)}>
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+
+            <button className="makeup-clear-btn" style={{ marginTop: "16px" }} onClick={clearAll}>🗑️ Fjern alt</button>
+          </div>
+
+          {/* ── HANDS SVG ── */}
+          <div className="nail-hands-wrap">
+            <svg ref={svgRef} viewBox="0 0 640 380" className="nail-hands-svg">
+
+              {/* ══ LEFT HAND ══ */}
+              {/* Palm */}
+              <rect x="48"  y="252" width="178" height="120" rx="42" fill={SKIN} />
+              <rect x="48"  y="252" width="178" height="12"  rx="8"  fill={SKIN_SH} opacity="0.35" />
+              {/* Fingers */}
+              <rect x="97"  y="144" width="20" height="116" rx="10" fill={SKIN} />
+              <rect x="130" y="128" width="24" height="132" rx="12" fill={SKIN} />
+              <rect x="165" y="136" width="22" height="124" rx="11" fill={SKIN} />
+              <rect x="197" y="161" width="16" height="99"  rx="8"  fill={SKIN} />
+              {/* Thumb */}
+              <path d="M57,200 Q46,222 48,263 Q52,292 70,297 Q88,294 93,268 Q97,241 88,216 Q80,196 65,194 Z" fill={SKIN} />
+              {/* Knuckles */}
+              {[107,142,176,205].map((cx,i) => <ellipse key={i} cx={cx} cy={[202,195,200,214][i]} rx="8" ry="3.5" fill={SKIN_SH} opacity="0.3" />)}
+
+              {/* ══ RIGHT HAND ══ */}
+              <rect x="414" y="252" width="178" height="120" rx="42" fill={SKIN} />
+              <rect x="414" y="252" width="178" height="12"  rx="8"  fill={SKIN_SH} opacity="0.35" />
+              <rect x="523" y="144" width="20" height="116" rx="10" fill={SKIN} />
+              <rect x="486" y="128" width="24" height="132" rx="12" fill={SKIN} />
+              <rect x="453" y="136" width="22" height="124" rx="11" fill={SKIN} />
+              <rect x="427" y="161" width="16" height="99"  rx="8"  fill={SKIN} />
+              <path d="M583,200 Q594,222 592,263 Q588,292 570,297 Q552,294 547,268 Q543,241 552,216 Q560,196 575,194 Z" fill={SKIN} />
+              {[533,498,464,435].map((cx,i) => <ellipse key={i} cx={cx} cy={[202,195,200,214][i]} rx="8" ry="3.5" fill={SKIN_SH} opacity="0.3" />)}
+
+              {/* ══ NAILS ══ */}
+              {allNails.map((pos, idx) => {
+                const p  = nailPath(pos.cx, pos.baseY, pos.w, pos.h, shape);
+                const gl = nailGleam(pos.cx, pos.baseY, pos.w, pos.h);
+                const col = nailColors[idx];
+                const stks = nailStickers[idx];
+                return (
+                  <g key={idx} onClick={(e) => handleNail(idx, e)} style={{ cursor: tool === "polish" ? "pointer" : "cell" }}>
+                    <path d={p} fill={NAIL_BG} stroke={SKIN_SH} strokeWidth="0.8" />
+                    {col && col !== "transparent" && <path d={p} fill={col} opacity="0.93" />}
+                    <path d={gl} fill="rgba(255,255,255,0.5)" style={{ pointerEvents: "none" }} />
+                    {stks.map((s, si) => (
+                      <text key={si} x={s.x} y={s.y} fontSize="7" textAnchor="middle" dominantBaseline="middle" style={{ userSelect: "none", pointerEvents: "none" }}>{s.emoji}</text>
+                    ))}
+                    <path d={p} fill="transparent" />
+                  </g>
+                );
+              })}
+            </svg>
+          </div>
+        </div>
+
+        <button className="start-btn fashion-back-btn" onClick={onBack}>← Tilbake</button>
+      </div>
+    </div>
+  );
+}
+
+// ── Cute Play Hub ─────────────────────────────────────────────
+const PLAY_CARDS = [
+  { id: "game", emoji: "🎯", title: "Jeopardy Quiz", desc: "Spill quiz med lag og poeng.", tags: ["quiz", "kunnskap", "lag"] },
+  { id: "fashion", emoji: "👗", title: "Outfit Stylist", desc: "Bytt hår, topp, bukse og sko.", tags: ["fashion", "style", "dressup"] },
+  { id: "makeup", emoji: "💄", title: "Makeup Studio", desc: "Tegn makeup pa ansiktet med ulike verktøy.", tags: ["sminke", "makeup", "beauty"] },
+  { id: "nails", emoji: "💅", title: "Nail Studio", desc: "Neglelakk, former og stickers pa negler.", tags: ["negler", "nail", "design"] },
+  { id: "fortune", emoji: "🔮", title: "Fortune Spinner", desc: "Snurr hjulet for en cute challenge.", tags: ["lek", "spinn", "challenge"] },
+  { id: "stickers", emoji: "🧷", title: "Sticker Book", desc: "Lag eget klistremerke-kort.", tags: ["sticker", "kreativ", "toy"] },
+  { id: "quiz", emoji: "💕", title: "Friendship Quiz", desc: "Finn hvilken bestie-vibe du har.", tags: ["vennskap", "personlighet", "quiz"] },
+];
+
+function PlayHubScreen({ onOpen }) {
+  const [query, setQuery] = useState("");
+  const q = query.trim().toLowerCase();
+  const filtered = PLAY_CARDS.filter((card) => {
+    const hay = `${card.title} ${card.desc} ${card.tags.join(" ")}`.toLowerCase();
+    return q.length === 0 || hay.includes(q);
+  });
+
+  const openCard = (id) => {
+    if (id === "game") {
+      onOpen("setup");
+      return;
+    }
+    onOpen(id);
+  };
+
+  return (
+    <div className="play-hub-screen">
+      <EmojiBackground />
+      <div className="play-hub-inner">
+        <h1 className="fashion-title">🧸 Cute Play Hub 🧸</h1>
+        <p className="fashion-sub">Sok etter jentete spill og leker du vil spille!</p>
+
+        <input
+          className="hub-search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Sok: quiz, makeup, negler, stickers..."
+        />
+
+        <div className="hub-grid">
+          {filtered.map((card) => (
+            <button key={card.id} className="hub-card" onClick={() => openCard(card.id)}>
+              <span className="hub-card-emoji">{card.emoji}</span>
+              <span className="hub-card-title">{card.title}</span>
+              <span className="hub-card-desc">{card.desc}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Fortune Spinner ───────────────────────────────────────────
+const FORTUNE_TASKS = [
+  "Si tre ting du elsker ved deg selv ✨",
+  "Lag en mini catwalk i 10 sekunder 👠",
+  "Velg dagens power-farge 🎨",
+  "Gi en bestie et kompliment 💖",
+  "Lag en ny negle-kombinasjon 💅",
+  "Ta en glam-pause med highlighter 🌟",
+  "Velg en ny challenge i Play Hub 🧸",
+  "Dance break i 15 sekunder 💃",
+];
+
+function FortuneWheelScreen({ onBack }) {
+  const [angle, setAngle] = useState(0);
+  const [spinning, setSpinning] = useState(false);
+  const [result, setResult] = useState("");
+  const [selectedIndex, setSelectedIndex] = useState(null);
+
+  const spin = () => {
+    if (spinning) return;
+    const idx = Math.floor(Math.random() * FORTUNE_TASKS.length);
+    const step = 360 / FORTUNE_TASKS.length;
+    const target = 360 * 6 + (360 - idx * step - step / 2);
+    setSpinning(true);
+    setSelectedIndex(null);
+    setResult("Velger en challenge...");
+    setAngle((prev) => prev + target);
+    setTimeout(() => {
+      setSelectedIndex(idx);
+      setResult(FORTUNE_TASKS[idx]);
+      setSpinning(false);
+    }, 3200);
+  };
+
+  return (
+    <div className="fortune-screen">
+      <EmojiBackground />
+      <div className="fortune-inner">
+        <h1 className="fashion-title">🔮 Fortune Spinner 🔮</h1>
+        <p className="fashion-sub">Snurr og fa en ny cute aktivitet!</p>
+
+        <div className="wheel-wrap">
+          <div className="wheel-pointer">▼</div>
+          <div className="fortune-wheel" style={{ transform: `rotate(${angle}deg)` }}>
+            {FORTUNE_TASKS.map((_, i) => (
+              <span key={i} className="wheel-dot" style={{ transform: `rotate(${i * (360 / FORTUNE_TASKS.length)}deg) translateY(-132px)` }}>•</span>
+            ))}
+          </div>
+        </div>
+
+        <button className="start-btn" onClick={spin} disabled={spinning}>
+          {spinning ? "✨ Spinner..." : "✨ Snurr hjulet"}
+        </button>
+
+        <div className="fortune-result-card">
+          <p className="fortune-result-title">Dagens challenge</p>
+          <p className="fortune-result">{result || "Trykk spin for en challenge"}</p>
+        </div>
+
+        <div className="fortune-task-list" aria-live="polite">
+          {FORTUNE_TASKS.map((task, i) => (
+            <div
+              key={task}
+              className={`fortune-task-item ${selectedIndex === i ? "selected" : ""}`}
+            >
+              <span className="fortune-task-dot">{selectedIndex === i ? "💖" : "•"}</span>
+              <span>{task}</span>
+            </div>
+          ))}
+        </div>
+        <button className="start-btn fashion-back-btn" onClick={onBack}>← Tilbake</button>
+      </div>
+    </div>
+  );
+}
+
+// ── Sticker Book ──────────────────────────────────────────────
+const STICKER_ITEMS = ["⭐", "🌈", "🩷", "💎", "🌸", "🦋", "🎀", "✨", "🧸", "🍓", "🌺", "🫧"];
+
+function StickerBookScreen({ onBack }) {
+  const [active, setActive] = useState("⭐");
+  const [size, setSize] = useState(26);
+  const [placed, setPlaced] = useState([]);
+
+  const placeSticker = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setPlaced((prev) => [...prev, { emoji: active, x, y, size }]);
+  };
+
+  return (
+    <div className="sticker-screen">
+      <EmojiBackground />
+      <div className="sticker-inner">
+        <h1 className="fashion-title">🧷 Sticker Book 🧷</h1>
+        <p className="fashion-sub">Lag ditt eget cute kort med klistremerker!</p>
+
+        <div className="sticker-toolbar">
+          {STICKER_ITEMS.map((s) => (
+            <button key={s} className={`nail-sticker-btn ${active === s ? "active" : ""}`} onClick={() => setActive(s)}>{s}</button>
+          ))}
+          <label className="sticker-size-label">Storrelsen</label>
+          <input className="brush-size-slider" type="range" min="14" max="52" step="1" value={size} onChange={(e) => setSize(parseInt(e.target.value, 10))} />
+          <button className="makeup-clear-btn" onClick={() => setPlaced([])}>🗑️ Fjern alt</button>
+        </div>
+
+        <div className="sticker-board" onClick={placeSticker}>
+          {placed.map((item, i) => (
+            <span key={i} className="sticker-item" style={{ left: `${item.x}%`, top: `${item.y}%`, fontSize: `${item.size}px` }}>
+              {item.emoji}
+            </span>
+          ))}
+        </div>
+
+        <button className="start-btn fashion-back-btn" onClick={onBack}>← Tilbake</button>
+      </div>
+    </div>
+  );
+}
+
+// ── Friendship Quiz ───────────────────────────────────────────
+const FRIENDSHIP_QUESTIONS = [
+  {
+    q: "Hva er drømmedagen med bestie?",
+    options: [
+      { t: "Spa + selfcare", s: 3 },
+      { t: "Shopping + cafe", s: 2 },
+      { t: "Gaming + chill", s: 1 },
+      { t: "Dance + party", s: 4 },
+    ],
+  },
+  {
+    q: "Velg en power-accessory:",
+    options: [
+      { t: "Hårsløyfe", s: 2 },
+      { t: "Glitterveske", s: 4 },
+      { t: "Chunky sneakers", s: 1 },
+      { t: "Diamant-hårklype", s: 3 },
+    ],
+  },
+  {
+    q: "Hvilken vibe matcher deg mest?",
+    options: [
+      { t: "Soft & sweet", s: 3 },
+      { t: "Bold & glam", s: 4 },
+      { t: "Cool & comfy", s: 1 },
+      { t: "Cute & creative", s: 2 },
+    ],
+  },
+];
+
+function FriendshipQuizScreen({ onBack }) {
+  const [idx, setIdx] = useState(0);
+  const [score, setScore] = useState(0);
+
+  const pick = (s) => {
+    setScore((v) => v + s);
+    setIdx((v) => v + 1);
+  };
+
+  const restart = () => {
+    setIdx(0);
+    setScore(0);
+  };
+
+  const done = idx >= FRIENDSHIP_QUESTIONS.length;
+  let result = "";
+  if (done) {
+    if (score <= 5) result = "Du er Cozy Bestie ☕: rolig, trygg og super-loyal.";
+    else if (score <= 8) result = "Du er Cute Creator 🎨: kreativ, morsom og full av ideer.";
+    else result = "Du er Glam Queen 👑: selvsikker, shiny og ikonisk!";
+  }
+
+  return (
+    <div className="friendship-screen">
+      <EmojiBackground />
+      <div className="friendship-inner">
+        <h1 className="fashion-title">💕 Friendship Quiz 💕</h1>
+        {!done ? (
+          <div className="friendship-card">
+            <p className="friendship-step">Sporsmal {idx + 1} / {FRIENDSHIP_QUESTIONS.length}</p>
+            <h3 className="friendship-question">{FRIENDSHIP_QUESTIONS[idx].q}</h3>
+            <div className="friendship-options">
+              {FRIENDSHIP_QUESTIONS[idx].options.map((o) => (
+                <button key={o.t} className="friendship-option-btn" onClick={() => pick(o.s)}>{o.t}</button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="friendship-card">
+            <p className="friendship-result">{result}</p>
+            <button className="start-btn" onClick={restart}>Ta quizen igjen</button>
+          </div>
+        )}
         <button className="start-btn fashion-back-btn" onClick={onBack}>← Tilbake</button>
       </div>
     </div>
