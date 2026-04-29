@@ -1740,6 +1740,10 @@ function MemoryMatchScreen({ onBack }) {
 
 function DreamMirrorScreen({ onBack }) {
   const [sessionId, setSessionId] = useState("");
+  const [profileId, setProfileId] = useState("");
+  const [profileName, setProfileName] = useState("Josefine");
+  const [slot, setSlot] = useState(1);
+  const [profiles, setProfiles] = useState([]);
   const [state, setState] = useState(null);
   const [message, setMessage] = useState("Laster Drømmespeilet...");
   const [runeWord, setRuneWord] = useState("");
@@ -1759,21 +1763,51 @@ function DreamMirrorScreen({ onBack }) {
     setState(data.state);
   };
 
+  const refreshProfiles = async () => {
+    const data = await fetchJson("/api/dream/profiles");
+    setProfiles(data.profiles || []);
+  };
+
+  const startProfile = async ({ nextName, nextSlot, nextProfileId }) => {
+    const data = await fetchJson("/api/dream/profile", {
+      method: "POST",
+      body: JSON.stringify({
+        profileName: nextName,
+        slot: nextSlot,
+        profileId: nextProfileId || undefined,
+      }),
+    });
+    setSessionId(data.sessionId);
+    setProfileId(data.profileId);
+    setProfileName(data.profileName);
+    setSlot(data.slot);
+    setState(data.state);
+    localStorage.setItem(
+      "dream_profile_meta",
+      JSON.stringify({
+        profileId: data.profileId,
+        profileName: data.profileName,
+        slot: data.slot,
+      })
+    );
+  };
+
   useEffect(() => {
     const init = async () => {
       try {
-        const stored = localStorage.getItem("dream_quest_session");
-        if (stored) {
-          setSessionId(stored);
-          await refreshState(stored);
-          setMessage("Fortsett questen din ✨");
-          return;
+        await refreshProfiles();
+        const raw = localStorage.getItem("dream_profile_meta");
+        if (raw) {
+          const stored = JSON.parse(raw);
+          await startProfile({
+            nextName: stored.profileName || "Josefine",
+            nextSlot: stored.slot || 1,
+            nextProfileId: stored.profileId,
+          });
+          setMessage("Profil lastet. Fortsett eventyret.");
+        } else {
+          setMessage("Velg profilnavn + slot for a starte Drømmespeilet.");
         }
-        const data = await fetchJson("/api/dream/session", { method: "POST" });
-        setSessionId(data.sessionId);
-        localStorage.setItem("dream_quest_session", data.sessionId);
-        setState(data.state);
-        setMessage("Nytt eventyr startet!");
       } catch {
         setMessage("Kunne ikke koble til backend. Start server først.");
       }
@@ -1810,16 +1844,17 @@ function DreamMirrorScreen({ onBack }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [state, sessionId, loading]);
 
-  const interact = async (action = "interact") => {
+  const interact = async (action = "interact", choiceId = "") => {
     if (!sessionId || loading) return;
     setLoading(true);
     try {
       const data = await fetchJson(`/api/dream/interact/${sessionId}`, {
         method: "POST",
-        body: JSON.stringify({ runeWord, action }),
+        body: JSON.stringify({ runeWord, action, choiceId }),
       });
       setState(data.state);
       setMessage(data.message);
+      await refreshProfiles();
     } catch {
       setMessage("Noe gikk galt med quest-action.");
     } finally {
@@ -1835,6 +1870,7 @@ function DreamMirrorScreen({ onBack }) {
       setState(data.state);
       setMessage("Eventyret er resatt. Lykke til!");
       setRuneWord("");
+      await refreshProfiles();
     } catch {
       setMessage("Kunne ikke resette eventyret.");
     } finally {
@@ -1842,11 +1878,49 @@ function DreamMirrorScreen({ onBack }) {
     }
   };
 
-  const mapW = state?.world?.width || 11;
-  const mapH = state?.world?.height || 8;
-  const blocked = state?.world?.blocked || [];
-  const pois = state?.world?.pois || [];
+  const saveProfile = async () => {
+    if (!sessionId || loading) return;
+    setLoading(true);
+    try {
+      await fetchJson(`/api/dream/profile/save/${sessionId}`, { method: "POST" });
+      await refreshProfiles();
+      setMessage("Profil lagret til backend-slot.");
+    } catch {
+      setMessage("Kunne ikke lagre profilen akkurat na.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadSelectedSlot = async () => {
+    if (loading) return;
+    setLoading(true);
+    try {
+      const existing = profiles.find(
+        (p) => p.slot === Number(slot) && p.profileName.toLowerCase() === profileName.toLowerCase()
+      );
+      await startProfile({
+        nextName: profileName,
+        nextSlot: Number(slot),
+        nextProfileId: existing?.profileId,
+      });
+      setMessage(existing ? "Eksisterende profil lastet." : "Ny profil startet i valgt slot.");
+      await refreshProfiles();
+    } catch {
+      setMessage("Kunne ikke starte/laste profil.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const area = state?.world?.currentArea;
+  const mapW = area?.width || 11;
+  const mapH = area?.height || 8;
+  const blocked = area?.blocked || [];
+  const pois = area?.pois || [];
+  const areaName = area?.name || "Ukjent omrade";
   const activeQuest = state?.quests?.find((q) => q.status === "active");
+  const pendingDialog = state?.pendingDialog;
   const isCompleted = Boolean(state?.completed);
 
   const isBlocked = (x, y) => blocked.some(([bx, by]) => bx === x && by === y);
@@ -1857,28 +1931,60 @@ function DreamMirrorScreen({ onBack }) {
       <EmojiBackground />
       <div className="love-inner">
         <h1 className="fashion-title">🪞 Drømmespeilet Quest 🪞</h1>
-        <p className="fashion-sub">Utforsk verdenen, samle items, snakk med NPC-er og åpne Speilporten.</p>
+        <p className="fashion-sub">Cinematic 3D-feel i full opplosning: utforsk soner, dialogvalg og ekte quest-progresjon.</p>
 
         <div className="love-card dream-card">
+          <div className="dream-profile-row">
+            <input
+              className="setup-input"
+              value={profileName}
+              onChange={(e) => setProfileName(e.target.value)}
+              placeholder="Profilnavn"
+              maxLength={32}
+            />
+            <select className="setup-input" value={slot} onChange={(e) => setSlot(Number(e.target.value))}>
+              <option value={1}>Slot 1</option>
+              <option value={2}>Slot 2</option>
+              <option value={3}>Slot 3</option>
+            </select>
+            <button className="start-btn" onClick={loadSelectedSlot} disabled={loading}>Start/Load</button>
+            <button className="friendship-option-btn" onClick={saveProfile} disabled={!sessionId || loading}>Save</button>
+          </div>
+
+          <div className="dream-slot-list">
+            {profiles.length === 0 ? (
+              <span className="dream-hud-pill">Ingen profiler enda</span>
+            ) : (
+              profiles.map((p) => (
+                <span key={`${p.profileId}-${p.slot}`} className="dream-hud-pill">
+                  {p.profileName} · Slot {p.slot} · {p.completed ? "Fullfort" : `${p.steps} steg`}
+                </span>
+              ))
+            )}
+          </div>
+
           <div className="game-guide">
-            <strong>Hvordan spille:</strong> bruk piltaster/knapper for å flytte. På lokasjoner kan du bruke Snakk, Undersøk eller Bruk runeord.
+            <strong>Hvordan spille:</strong> bruk piltaster/knapper for å flytte. Reis i portaler mellom omrader, ta dialogvalg, og farm rewards som avgjor finalen.
           </div>
 
           <div className="dream-hud">
             <span className="dream-hud-pill">🧭 Aktiv quest: {activeQuest ? activeQuest.title : "Ingen"}</span>
+            <span className="dream-hud-pill">🌍 Omrade: {areaName}</span>
             <span className="dream-hud-pill">👣 Steg: {state?.steps ?? 0}</span>
             <span className="dream-hud-pill">🎒 Items: {state?.inventory?.length ?? 0}</span>
+            <span className="dream-hud-pill">✨ Stjernestov: {state?.rewards?.stardust ?? 0}</span>
+            <span className="dream-hud-pill">💞 Affinity: {state?.rewards?.affinity ?? 0}</span>
           </div>
 
-          <div className="dream-map" role="img" aria-label="Kart i Drømmespeilet">
+          <div className="dream-map dream-map-3d" role="img" aria-label="Kart i Drømmespeilet" style={{ gridTemplateColumns: `repeat(${mapW}, 1fr)` }}>
             {Array.from({ length: mapH }).map((_, y) =>
               Array.from({ length: mapW }).map((__, x) => {
                 const poi = poiAt(x, y);
                 const playerHere = state && state.player.x === x && state.player.y === y;
                 return (
-                  <div key={`${x}-${y}`} className={`dream-tile ${isBlocked(x, y) ? "blocked" : ""} ${playerHere ? "player-here" : ""}`}>
+                  <div key={`${x}-${y}`} className={`dream-tile ${isBlocked(x, y) ? "blocked" : ""} ${playerHere ? "player-here" : ""} ${poi ? "poi" : ""}`}>
                     {poi ? <span title={poi.label}>{poi.emoji}</span> : <span>·</span>}
-                    {playerHere && <span className="dream-player">🧚</span>}
+                    {playerHere && <span className="dream-player">🧚‍♀️</span>}
                   </div>
                 );
               })
@@ -1905,8 +2011,28 @@ function DreamMirrorScreen({ onBack }) {
             <button className="start-btn" onClick={() => interact("talk")} disabled={loading}>Snakk 🗣️</button>
             <button className="start-btn" onClick={() => interact("inspect")} disabled={loading}>Undersøk 🔍</button>
             <button className="start-btn" onClick={() => interact("use-rune")} disabled={loading}>Bruk runeord 🔮</button>
+            <button className="start-btn" onClick={() => interact("travel")} disabled={loading}>Reis portal 🌀</button>
             <button className="makeup-clear-btn" onClick={resetQuest} disabled={loading}>Reset quest</button>
           </div>
+
+          {pendingDialog && (
+            <div className="dream-dialog-box">
+              <p className="fortune-result-title">NPC-dialog</p>
+              <p className="dream-dialog-text">{pendingDialog.text}</p>
+              <div className="dream-dialog-choices">
+                {(pendingDialog.choices || []).map((choice) => (
+                  <button
+                    key={choice.id}
+                    className="friendship-option-btn"
+                    onClick={() => interact("talk", choice.id)}
+                    disabled={loading}
+                  >
+                    {choice.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <p className="fortune-result dream-reading">{message}</p>
 
@@ -1951,6 +2077,9 @@ function DreamMirrorScreen({ onBack }) {
           <div className="dream-history">
             <p className="fortune-result-title">Questlogg</p>
             <div className="dream-history-item">Tips: røde ruter er blokkert tåke og kan ikke passeres.</div>
+            <div className="dream-history-item">Tips: ved portal-ruter ma du trykke "Reis portal".</div>
+            <div className="dream-history-item">Tips: dialogvalg gir ulike mengder rewards.</div>
+            {profileId && <div className="dream-history-item">Profil-ID: {profileId}</div>}
           </div>
         </div>
 
